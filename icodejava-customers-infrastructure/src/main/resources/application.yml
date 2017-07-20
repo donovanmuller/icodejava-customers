@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/axon
+    username: axon
+    password: axon
+    driver-class-name: org.postgresql.Driver
+    validation-query: SELECT 1;
+    platform: postgres
+
+  h2:
+    console:
+      enabled: true
+      path: /h2console
+
+  # Spring Cloud Stream support
+  cloud:
+    stream:
+      bindings:
+        output:
+          contentType: application/json
