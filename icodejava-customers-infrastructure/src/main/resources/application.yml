@@ -18,3 +18,13 @@ spring:
       bindings:
         output:
           contentType: application/json
+
+---
+
+spring:
+  profiles: openshift
+  datasource:
+    url: jdbc:postgresql://postgresql:5432/axon
+  redis:
+    host: redis
+    password: axon

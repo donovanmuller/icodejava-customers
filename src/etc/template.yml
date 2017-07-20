@@ -73,6 +73,9 @@ objects:
           containers:
             - name: "icodejava-customers"
               image: "icodejava-customers"
+              env:
+                - name: SPRING_PROFILES_ACTIVE
+                  value: openshift
               ports:
                 - name: http
                   containerPort: 8080
