@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: "icodejava-customers"
+  annotations:
+    artifactId: "icodejava-customers"
+    description: "I Code Java Customers demo"
+    tags: bison,service
+labels:
+   template: icodejava-customers
+objects:
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: "icodejava-customers"
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: "springboot-maven3-centos"
+    spec:
+      tags:
+        - from:
+          kind: DockerImage
+          name: codecentric/springboot-maven3-centos
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      name: "icodejava-customers"
+      labels:
+        name: "icodejava-customers"
+    spec:
+      triggers:
+        - type: ConfigChange
+      source:
+        type: Git
+        git:
+          uri: "https://github.com/donovanmuller/icodejava-customers.git"
+      strategy:
+        type: "Source"
+        sourceStrategy:
+          from:
+            kind: "ImageStreamTag"
+            name: "springboot-maven3-centos:latest"
+      output:
+        to:
+          kind: ImageStreamTag
+          name: "icodejava-customers:latest"
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      name: "icodejava-customers"
+    spec:
+      strategy:
+        type: Rolling
+      triggers:
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - "icodejava-customers"
+            from:
+              kind: ImageStreamTag
+              name: "icodejava-customers:latest"
+        - type: ConfigChange
+      replicas: 1
+      selector:
+        name: "icodejava-customers"
+      template:
+        metadata:
+          labels:
+            name: "icodejava-customers"
+        spec:
+          containers:
+            - name: "icodejava-customers"
+              image: "icodejava-customers"
+              ports:
+                - name: http
+                  containerPort: 8080
+              readinessProbe:
+                httpGet:
+                  path: /info
+                  port: 8080
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
+              livenessgit Probe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
+          restartPolicy: Always
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: "icodejava-customers"
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          targetPort: http
+      selector:
+        name: "icodejava-customers"
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      name: "icodejava-customers"
+    spec:
+      host: icodejava-customers.openshift.switchbit.io
+      to:
+        kind: Service
+        name: "icodejava-customers"
+      port:
+        targetPort: http
